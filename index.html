@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connections – Especial 2 Anos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff8f0;
+      color: #333;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #e75480;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 500px;
+      margin: 20px auto;
+    }
+    .word {
+      background-color: #f1e3e4;
+      padding: 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .word.selected {
+      background-color: #ffcccb;
+    }
+    .message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .grouped {
+      background-color: #b2f2bb !important;
+      cursor: default;
+    }
+    #music-control {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Connections – Especial 2 Anos 💘</h1>
+  <p>Clique em 4 palavras e depois em "Enviar Grupo"</p>
+  <div class="grid" id="grid"></div>
+  <button onclick="checkGroup()">Enviar Grupo</button>
+  <div class="message" id="message"></div>
+  <audio id="bg-music" autoplay loop>
+    <source src="https://dl.dropboxusercontent.com/scl/fi/7l8j16brqh0i3ez3bq54b/John-Mayer-Love-Is-a-Verb.mp3?rlkey=18b1kkq6vqp5ng5q1lgmg3pcc&dl=0" type="audio/mpeg">
+    Seu navegador não suporta áudio incorporado.
+  </audio>
+
+  <script>
+    const words = [
+      "Sobremesas", "Coca Zero", "Memórias", "Late night calls",
+      "GV", "Caçula", "Formiguinhas", "Amor",
+      "Supercoffee", "Corrida", "Creme de ricota", "Papel higiênico folha tripla",
+      "Jiu-jitsu", "Terminar de comer", "Banheiro", "Sonecas no meio do dia"
+    ];
+
+    const correctGroups = [
+      ["Sobremesas", "Coca Zero", "Memórias", "Late night calls"],
+      ["GV", "Caçula", "Formiguinhas", "Amor"],
+      ["Supercoffee", "Corrida", "Creme de ricota", "Papel higiênico folha tripla"],
+      ["Jiu-jitsu", "Terminar de comer", "Banheiro", "Sonecas no meio do dia"]
+    ];
+
+    const groupLabels = [
+      "Coisas que dividimos",
+      "Coisas que temos em comum",
+      "Coisas que eu te apresentei",
+      "Coisas que eu espero (com prazer) você fazer"
+    ];
+
+    let selected = [];
+    let attempts = 0;
+    let foundGroups = 0;
+    let showAnswers = false;
+
+    const grid = document.getElementById("grid");
+    const message = document.getElementById("message");
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function renderGrid() {
+      shuffle(words);
+      words.forEach(word => {
+        const div = document.createElement("div");
+        div.className = "word";
+        div.innerText = word;
+        div.onclick = () => selectWord(div);
+        grid.appendChild(div);
+      });
+    }
+
+    function selectWord(element) {
+      if (element.classList.contains("grouped")) return;
+      element.classList.toggle("selected");
+      const text = element.innerText;
+      if (selected.includes(text)) {
+        selected = selected.filter(w => w !== text);
+      } else {
+        if (selected.length < 4) {
+          selected.push(text);
+        } else {
+          element.classList.remove("selected");
+        }
+      }
+    }
+
+    function checkGroup() {
+      if (showAnswers) return;
+
+      if (selected.length !== 4) {
+        message.innerText = "Selecione exatamente 4 palavras.";
+        return;
+      }
+
+      const sortedSelected = selected.slice().sort();
+      let matchedIndex = -1;
+
+      correctGroups.forEach((group, index) => {
+        if (JSON.stringify(group.slice().sort()) === JSON.stringify(sortedSelected)) {
+          matchedIndex = index;
+        }
+      });
+
+      if (matchedIndex !== -1) {
+        const wordDivs = document.querySelectorAll(".word");
+        wordDivs.forEach(div => {
+          if (selected.includes(div.innerText)) {
+            div.classList.remove("selected");
+            div.classList.add("grouped");
+          }
+        });
+        foundGroups++;
+        message.innerText = `Grupo correto! (${groupLabels[matchedIndex]})`;
+        if (foundGroups === 4) {
+          message.innerHTML = "<br><strong>Você achou todos os grupos — mas nada se compara ao que a gente constrói junto. Te amo muito mais do que 16 palavras podem dizer. 💛</strong>";
+        }
+      } else {
+        attempts++;
+        if (attempts >= 4) {
+          showCorrectAnswers();
+          return;
+        }
+        message.innerText = `Grupo incorreto. Tentativas: ${attempts}`;
+      }
+
+      selected = [];
+      document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+    }
+
+    function showCorrectAnswers() {
+      showAnswers = true;
+      const wordDivs = document.querySelectorAll(".word");
+      correctGroups.forEach((group, idx) => {
+        group.forEach(word => {
+          wordDivs.forEach(div => {
+            if (div.innerText === word && !div.classList.contains("grouped")) {
+              div.classList.add("grouped");
+            }
+          });
+        });
+      });
+      message.innerHTML = `<br><strong>Esses eram os grupos corretos 💛<br><br>
+        1. ${groupLabels[0]}: ${correctGroups[0].join(", ")}<br>
+        2. ${groupLabels[1]}: ${correctGroups[1].join(", ")}<br>
+        3. ${groupLabels[2]}: ${correctGroups[2].join(", ")}<br>
+        4. ${groupLabels[3]}: ${correctGroups[3].join(", ")}<br><br>
+        Te amo muito mais do que 16 palavras podem dizer 💛</strong>`;
+    }
+
+    renderGrid();
+  </script>
+</body>
+</html>
