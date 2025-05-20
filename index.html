@@ -117,15 +117,18 @@
       }
     }
 
-    function renderGrid(groups) {
-      if (!gridContainer) return;
-      gridContainer.innerHTML = "";
-      groups.forEach((group, idx) => {
+    function renderFoundGroups() {
+      const foundGroupsList = [...Array.from(usedGroups)].map(i => correctGroups[i]);
+      const groupedContainer = document.createElement("div");
+      groupedContainer.id = "grouped-container";
+      groupedContainer.innerHTML = "";
+
+      foundGroupsList.forEach((group, idx) => {
         const category = document.createElement("div");
         category.className = "category";
 
         const label = document.createElement("strong");
-        label.innerText = groupLabels[idx];
+        label.innerText = groupLabels[[...usedGroups][idx]];
         category.appendChild(label);
 
         const row = document.createElement("div");
@@ -138,16 +141,21 @@
         });
 
         category.appendChild(row);
-        gridContainer.appendChild(category);
+        groupedContainer.appendChild(category);
       });
+
+      gridContainer.innerHTML = "";
+      gridContainer.appendChild(groupedContainer);
+
+      if (currentWords.length > 0) {
+        renderInitialGrid();
+      }
     }
 
     let currentWords = words.slice();
     shuffle(currentWords);
 
     function renderInitialGrid() {
-      if (!gridContainer) return;
-      gridContainer.innerHTML = "";
       const row = document.createElement("div");
       row.className = "row";
       currentWords.forEach(word => {
@@ -196,15 +204,12 @@
       if (matchedIndex !== -1) {
         usedGroups.add(matchedIndex);
         foundGroups++;
-
-        // Remove as palavras do grupo correto da lista atual
         currentWords = currentWords.filter(word => !correctGroups[matchedIndex].includes(word));
 
-        renderGrid([...Array.from(usedGroups)].map(i => correctGroups[i]));
-
         if (currentWords.length > 0) {
-          renderInitialGrid();
+          renderFoundGroups();
         } else {
+          renderGrid(correctGroups);
           message.innerHTML = "<br><strong>Você achou todos os grupos — e a cada dia a gente inventa um novo. Te amo mais do que qualquer joguinho conseguiria dizer. 💛</strong>";
           restartButton.style.display = "inline-block";
         }
