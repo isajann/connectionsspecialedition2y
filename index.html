@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connections – Especial 2 Anos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #fff8f0;
+      font-family: 'Poppins', sans-serif;
+      background-color: #d8f3dc;
       color: #333;
       text-align: center;
       padding: 20px;
@@ -15,44 +16,63 @@
     h1 {
       color: #e75480;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+    .category {
+      margin-top: 20px;
+    }
+    .grid-container {
+      display: flex;
+      flex-direction: column;
       gap: 10px;
-      max-width: 500px;
+      max-width: 600px;
       margin: 20px auto;
     }
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
     .word {
-      background-color: #f1e3e4;
+      background-color: #556b2f;
+      color: white;
       padding: 15px;
       border-radius: 10px;
       cursor: pointer;
       transition: background-color 0.2s;
+      flex: 1;
     }
     .word.selected {
-      background-color: #ffcccb;
+      background-color: #6b8e23;
+    }
+    .word.grouped {
+      background-color: #b2f2bb !important;
+      cursor: default;
     }
     .message {
       margin-top: 20px;
       font-weight: bold;
     }
-    .grouped {
-      background-color: #b2f2bb !important;
-      cursor: default;
-    }
-    #music-control {
+    #restart-button {
       margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #e75480;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none;
     }
   </style>
 </head>
 <body>
   <h1>Connections – Especial 2 Anos 💘</h1>
   <p>Clique em 4 palavras e depois em "Enviar Grupo"</p>
-  <div class="grid" id="grid"></div>
+  <div class="grid-container" id="grid-container"></div>
   <button onclick="checkGroup()">Enviar Grupo</button>
   <div class="message" id="message"></div>
+  <button id="restart-button" onclick="restartGame()">Jogar Novamente</button>
   <audio id="bg-music" autoplay loop>
-    <source src="https://dl.dropboxusercontent.com/scl/fi/7l8j16brqh0i3ez3bq54b/John-Mayer-Love-Is-a-Verb.mp3?rlkey=18b1kkq6vqp5ng5q1lgmg3pcc&dl=0" type="audio/mpeg">
+    <source src="https://dl.dropboxusercontent.com/scl/fi/7l8j16brqh0i3ez3bq54b/John-Mayer-Love-Is-a-Verb.mp3?rlkey=18b1kkq6vqp5ng5q1lgmg3pcc" type="audio/mpeg">
     Seu navegador não suporta áudio incorporado.
   </audio>
 
@@ -82,9 +102,11 @@
     let attempts = 0;
     let foundGroups = 0;
     let showAnswers = false;
+    const usedGroups = new Set();
 
-    const grid = document.getElementById("grid");
+    const gridContainer = document.getElementById("grid-container");
     const message = document.getElementById("message");
+    const restartButton = document.getElementById("restart-button");
 
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -93,15 +115,50 @@
       }
     }
 
-    function renderGrid() {
-      shuffle(words);
-      words.forEach(word => {
-        const div = document.createElement("div");
-        div.className = "word";
-        div.innerText = word;
-        div.onclick = () => selectWord(div);
-        grid.appendChild(div);
+    function renderGrid(groups = []) {
+      gridContainer.innerHTML = "";
+      groups.forEach((group, idx) => {
+        const category = document.createElement("div");
+        category.className = "category";
+
+        const label = document.createElement("strong");
+        label.innerText = groupLabels[idx];
+        category.appendChild(label);
+
+        const row = document.createElement("div");
+        row.className = "row";
+        group.forEach(word => {
+          const div = document.createElement("div");
+          div.className = "word grouped";
+          div.innerText = word;
+          row.appendChild(div);
+        });
+
+        category.appendChild(row);
+        gridContainer.appendChild(category);
       });
+    }
+
+    let currentWords = words.slice();
+    shuffle(currentWords);
+
+    function renderInitialGrid() {
+      const rowCount = 4;
+      const rowSize = 4;
+      gridContainer.innerHTML = "";
+      for (let i = 0; i < rowCount; i++) {
+        const row = document.createElement("div");
+        row.className = "row";
+        for (let j = 0; j < rowSize; j++) {
+          const word = currentWords[i * rowSize + j];
+          const div = document.createElement("div");
+          div.className = "word";
+          div.innerText = word;
+          div.onclick = () => selectWord(div);
+          row.appendChild(div);
+        }
+        gridContainer.appendChild(row);
+      }
     }
 
     function selectWord(element) {
@@ -131,23 +188,21 @@
       let matchedIndex = -1;
 
       correctGroups.forEach((group, index) => {
+        if (usedGroups.has(index)) return;
         if (JSON.stringify(group.slice().sort()) === JSON.stringify(sortedSelected)) {
           matchedIndex = index;
         }
       });
 
       if (matchedIndex !== -1) {
-        const wordDivs = document.querySelectorAll(".word");
-        wordDivs.forEach(div => {
-          if (selected.includes(div.innerText)) {
-            div.classList.remove("selected");
-            div.classList.add("grouped");
-          }
-        });
+        usedGroups.add(matchedIndex);
         foundGroups++;
+        renderGrid([...Array.from(usedGroups)].map(i => correctGroups[i]));
+
         message.innerText = `Grupo correto! (${groupLabels[matchedIndex]})`;
         if (foundGroups === 4) {
           message.innerHTML = "<br><strong>Você achou todos os grupos — mas nada se compara ao que a gente constrói junto. Te amo muito mais do que 16 palavras podem dizer. 💛</strong>";
+          restartButton.style.display = "inline-block";
         }
       } else {
         attempts++;
@@ -164,25 +219,21 @@
 
     function showCorrectAnswers() {
       showAnswers = true;
-      const wordDivs = document.querySelectorAll(".word");
-      correctGroups.forEach((group, idx) => {
-        group.forEach(word => {
-          wordDivs.forEach(div => {
-            if (div.innerText === word && !div.classList.contains("grouped")) {
-              div.classList.add("grouped");
-            }
-          });
-        });
-      });
+      renderGrid(correctGroups);
       message.innerHTML = `<br><strong>Esses eram os grupos corretos 💛<br><br>
-        1. ${groupLabels[0]}: ${correctGroups[0].join(", ")}<br>
-        2. ${groupLabels[1]}: ${correctGroups[1].join(", ")}<br>
-        3. ${groupLabels[2]}: ${correctGroups[2].join(", ")}<br>
-        4. ${groupLabels[3]}: ${correctGroups[3].join(", ")}<br><br>
+        1. ${groupLabels[0]}<br>
+        2. ${groupLabels[1]}<br>
+        3. ${groupLabels[2]}<br>
+        4. ${groupLabels[3]}<br><br>
         Te amo muito mais do que 16 palavras podem dizer 💛</strong>`;
+      restartButton.style.display = "inline-block";
     }
 
-    renderGrid();
+    function restartGame() {
+      location.reload();
+    }
+
+    renderInitialGrid();
   </script>
 </body>
 </html>
