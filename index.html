@@ -30,6 +30,7 @@
       display: flex;
       justify-content: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
     .word {
       background-color: #556b2f;
@@ -38,7 +39,8 @@
       border-radius: 10px;
       cursor: pointer;
       transition: background-color 0.2s;
-      flex: 1;
+      min-width: 100px;
+      text-align: center;
     }
     .word.selected {
       background-color: #6b8e23;
@@ -72,7 +74,7 @@
   <div class="message" id="message"></div>
   <button id="restart-button" onclick="restartGame()">Jogar Novamente</button>
   <audio id="bg-music" autoplay loop>
-    <source src="https://dl.dropboxusercontent.com/scl/fi/7l8j16brqh0i3ez3bq54b/John-Mayer-Love-Is-a-Verb.mp3?rlkey=18b1kkq6vqp5ng5q1lgmg3pcc" type="audio/mpeg">
+    <source src="Love-Is-a-Verb.mp3" type="audio/mpeg">
     Seu navegador não suporta áudio incorporado.
   </audio>
 
@@ -115,7 +117,8 @@
       }
     }
 
-    function renderGrid(groups = []) {
+    function renderGrid(groups) {
+      if (!gridContainer) return;
       gridContainer.innerHTML = "";
       groups.forEach((group, idx) => {
         const category = document.createElement("div");
@@ -143,22 +146,18 @@
     shuffle(currentWords);
 
     function renderInitialGrid() {
-      const rowCount = 4;
-      const rowSize = 4;
+      if (!gridContainer) return;
       gridContainer.innerHTML = "";
-      for (let i = 0; i < rowCount; i++) {
-        const row = document.createElement("div");
-        row.className = "row";
-        for (let j = 0; j < rowSize; j++) {
-          const word = currentWords[i * rowSize + j];
-          const div = document.createElement("div");
-          div.className = "word";
-          div.innerText = word;
-          div.onclick = () => selectWord(div);
-          row.appendChild(div);
-        }
-        gridContainer.appendChild(row);
-      }
+      const row = document.createElement("div");
+      row.className = "row";
+      currentWords.forEach(word => {
+        const div = document.createElement("div");
+        div.className = "word";
+        div.innerText = word;
+        div.onclick = () => selectWord(div);
+        row.appendChild(div);
+      });
+      gridContainer.appendChild(row);
     }
 
     function selectWord(element) {
@@ -197,11 +196,16 @@
       if (matchedIndex !== -1) {
         usedGroups.add(matchedIndex);
         foundGroups++;
+
+        // Remove as palavras do grupo correto da lista atual
+        currentWords = currentWords.filter(word => !correctGroups[matchedIndex].includes(word));
+
         renderGrid([...Array.from(usedGroups)].map(i => correctGroups[i]));
 
-        message.innerText = `Grupo correto! (${groupLabels[matchedIndex]})`;
-        if (foundGroups === 4) {
-          message.innerHTML = "<br><strong>Você achou todos os grupos — mas nada se compara ao que a gente constrói junto. Te amo muito mais do que 16 palavras podem dizer. 💛</strong>";
+        if (currentWords.length > 0) {
+          renderInitialGrid();
+        } else {
+          message.innerHTML = "<br><strong>Você achou todos os grupos — e a cada dia a gente inventa um novo. Te amo mais do que qualquer joguinho conseguiria dizer. 💛</strong>";
           restartButton.style.display = "inline-block";
         }
       } else {
@@ -225,7 +229,7 @@
         2. ${groupLabels[1]}<br>
         3. ${groupLabels[2]}<br>
         4. ${groupLabels[3]}<br><br>
-        Te amo muito mais do que 16 palavras podem dizer 💛</strong>`;
+        E amanhã a gente inventa mais 💛</strong>`;
       restartButton.style.display = "inline-block";
     }
 
