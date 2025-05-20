@@ -117,41 +117,6 @@
       }
     }
 
-    function renderFoundGroups() {
-      const foundGroupsList = [...Array.from(usedGroups)].map(i => correctGroups[i]);
-      const groupedContainer = document.createElement("div");
-      groupedContainer.id = "grouped-container";
-      groupedContainer.innerHTML = "";
-
-      foundGroupsList.forEach((group, idx) => {
-        const category = document.createElement("div");
-        category.className = "category";
-
-        const label = document.createElement("strong");
-        label.innerText = groupLabels[[...usedGroups][idx]];
-        category.appendChild(label);
-
-        const row = document.createElement("div");
-        row.className = "row";
-        group.forEach(word => {
-          const div = document.createElement("div");
-          div.className = "word grouped";
-          div.innerText = word;
-          row.appendChild(div);
-        });
-
-        category.appendChild(row);
-        groupedContainer.appendChild(category);
-      });
-
-      gridContainer.innerHTML = "";
-      gridContainer.appendChild(groupedContainer);
-
-      if (currentWords.length > 0) {
-        renderInitialGrid();
-      }
-    }
-
     let currentWords = words.slice();
     shuffle(currentWords);
 
@@ -166,6 +131,36 @@
         row.appendChild(div);
       });
       gridContainer.appendChild(row);
+    }
+
+    function renderFoundGroups() {
+      gridContainer.innerHTML = "";
+
+      [...usedGroups].forEach(index => {
+        const group = correctGroups[index];
+        const category = document.createElement("div");
+        category.className = "category";
+
+        const label = document.createElement("strong");
+        label.innerText = groupLabels[index];
+        category.appendChild(label);
+
+        const row = document.createElement("div");
+        row.className = "row";
+        group.forEach(word => {
+          const div = document.createElement("div");
+          div.className = "word grouped";
+          div.innerText = word;
+          row.appendChild(div);
+        });
+
+        category.appendChild(row);
+        gridContainer.appendChild(category);
+      });
+
+      if (currentWords.length > 0) {
+        renderInitialGrid();
+      }
     }
 
     function selectWord(element) {
@@ -205,11 +200,9 @@
         usedGroups.add(matchedIndex);
         foundGroups++;
         currentWords = currentWords.filter(word => !correctGroups[matchedIndex].includes(word));
+        renderFoundGroups();
 
-        if (currentWords.length > 0) {
-          renderFoundGroups();
-        } else {
-          renderGrid(correctGroups);
+        if (foundGroups === correctGroups.length) {
           message.innerHTML = "<br><strong>Você achou todos os grupos — e a cada dia a gente inventa um novo. Te amo mais do que qualquer joguinho conseguiria dizer. 💛</strong>";
           restartButton.style.display = "inline-block";
         }
@@ -224,6 +217,31 @@
 
       selected = [];
       document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+    }
+
+    function renderGrid(groups) {
+      gridContainer.innerHTML = "";
+      groups.forEach((group, index) => {
+        const category = document.createElement("div");
+        category.className = "category";
+
+        const label = document.createElement("strong");
+        label.innerText = groupLabels[index];
+        category.appendChild(label);
+
+        const row = document.createElement("div");
+        row.className = "row";
+
+        group.forEach(word => {
+          const div = document.createElement("div");
+          div.className = "word grouped";
+          div.innerText = word;
+          row.appendChild(div);
+        });
+
+        category.appendChild(row);
+        gridContainer.appendChild(category);
+      });
     }
 
     function showCorrectAnswers() {
